@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Which Interpretation of Quantum Physics Are You?</title>
+
+<!-- Bootstrap for a quick, polished look -->
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+
+<style>
+  body            { background:#f8f9fa; }
+  .quiz-card      { max-width:760px; margin:40px auto; }
+  .option-btn     { text-align:left; margin-bottom:12px; }
+  .fade-enter     { opacity:0; transform:translateY(10px); }
+  .fade-enter-active,
+  .fade-exit      { transition:all .25s ease; }
+  .fade-enter-active{ opacity:1; transform:none; }
+  .fade-exit      { opacity:0; transform:translateY(-10px); }
+</style>
+</head>
+<body>
+<div class="container quiz-card">
+
+  <!-- Main Q&A card -->
+  <div id="quizCard" class="card shadow-sm">
+    <div class="card-body">
+      <h5 id="questionText" class="card-title mb-4"></h5>
+      <div id="optionArea"></div>
+    </div>
+  </div>
+
+  <!-- Result card (hidden until finished) -->
+  <div id="resultCard" class="card shadow-sm mt-4 d-none">
+    <div class="card-body">
+      <h4 id="resultTitle" class="card-title"></h4>
+      <p id="resultSummary" class="mt-3"></p>
+      <h6 id="flavourHeading" class="mt-4"></h6>
+      <ul id="flavourList" class="list-group list-group-flush"></ul>
+    </div>
+  </div>
+
+  <button id="restartBtn" class="btn btn-outline-secondary mt-4 d-none">
+    ↻  Start over
+  </button>
+</div>
+
+<script>
+/* =====  DATA  ========================================================== */
+
+const tree = {
+  q1: {
+    text: "You believe the wave function |ψ⟩ describes something physically real, or is |ψ⟩ itself a part of reality. When you write down |ψ⟩ for an electron, do you picture it as the electron’s actual physical condition — just as concrete as its mass — or do you view it as a compact way to record what any well‑informed experimenter could predict?",
+    options: [
+      { label: "Agreed. Real stuff.", next: "q2" },
+      { label: "No. The wave function is information only.", next: "q10" }
+    ]
+  },
+
+  /* -- Real‑ψ branch --------------------------------------------------- */
+  q2: {
+    text: "If |ψ⟩ is real, does it ever suffer a genuine, non‑unitary collapse that breaks Schrödinger’s smooth, deterministic evolution?",
+    options: [
+      { label: "Yes, real collapses happen.", next: "q3" },
+      { label: "No, unitary evolution is never broken.", next: "q6" }
+    ]
+  },
+  q3: {
+    text: "Is that collapse produced by an objective, spontaneous physical mechanism built into the laws of nature?",
+    options: [
+      { label: "Yes.", next: "Objective-Collapse Theory" },
+      { label: "No.",  next: "q4" }
+    ]
+  },
+  q4: {
+    text: "Is collapse instead triggered specifically by a conscious observer?",
+    options: [
+      { label: "Yes.", next: "Consciousness-Collapse" },
+      { label: "No.",  next: "q5" }
+    ]
+  },
+  q5: {
+    text: "Are you content to treat collapse as a pragmatic rule of thumb that simply works for laboratory predictions, without insisting on a deeper mechanism?",
+    options: [
+      { label: "Yes, pragmatism is fine.", next: "Pragmatic Copenhagen" },
+      { label: "No, I still want a deeper story.", next: "q6" }
+    ]
+  },
+  q6: {
+    text: "If there is no collapse at all, do you hold that all branches of the ever‑growing wave function are equally real, each a full‑blooded universe that never again interferes with the others?",
+    options: [
+      { label: "Yes, every branch is real.", next: "Many-Worlds / Everettian" },
+      { label: "No, something still singles out one history.", next: "q7" }
+    ]
+  },
+  q7: {
+    text: "Would you add hidden variables that give particles precise positions or other definite values while |ψ⟩ merely guides their motion?",
+    options: [
+      { label: "Yes.", next: "Pilot-Wave / Bohmian" },
+      { label: "No.",  next: "q8" }
+    ]
+  },
+  q8: {
+    text: "Do histories become definite only when they satisfy a strict consistency rule that cancels interference terms?",
+    options: [
+      { label: "Yes.", next: "Consistent-Histories" },
+      { label: "No.",  next: "q9" }
+    ]
+  },
+  q9: {
+    text: "To preserve locality or determinism, are you willing to allow potentially more exotic options?",
+    options: [
+      { label: "Yes, future measurements can influence past states (retro‑causal).", next: "Time-Symmetric / Two-State-Vector" },
+      { label: "Yes, correlations were hard‑wired at the Big Bang (superdeterminism).", next: "Superdeterminism" },
+      { label: "No, neither of those appeals to me.", next: "Modal / ψ-ontic non-collapse" }
+    ]
+  },
+
+  /* -- Ψ = information branch ------------------------------------------ */
+  q10: {
+    text: "Are quantum probabilities strictly personal betting odds, meaningful only for the individual agent who assigns them and updated just like Bayesian beliefs?",
+    options: [
+      { label: "Yes.", next: "QBism (Quantum Bayesianism)" },
+      { label: "No.",  next: "q11" }
+    ]
+  },
+  q11: {
+    text: "Does the quantum state exist only in the relation between two systems or observers — so facts are always “A relative to B,” and what’s definite for one observer may still be indefinite for another?",
+    options: [
+      { label: "Yes.", next: "Relational Quantum Mechanics" },
+      { label: "No.",  next: "q12" }
+    ]
+  },
+  q12: {
+    text: "Is |ψ⟩ nothing more than a statistical catalogue for an ensemble of identically prepared systems, never for a single particle?",
+    options: [
+      { label: "Yes.", next: "Ensemble / Statistical Interpretation" },
+      { label: "No.",  next: "q13" }
+    ]
+  },
+  q13: {
+    text: "Do real physical events involve a time‑symmetric handshake — an offer wave from emitter and a confirmation wave from absorber that meet across past and future to seal a transaction?",
+    options: [
+      { label: "Yes.", next: "Transactional Interpretation" },
+      { label: "No, I prefer a purely instrumental recipe without extra ontology.", next: "Pragmatic Copenhagen" }
+    ]
+  },
+
+  /* -- Leaf nodes (results) -------------------------------------------- */
+  "Objective-Collapse Theory":            { result: true },
+  "Consciousness-Collapse":               { result: true },
+  "Pragmatic Copenhagen":                 { result: true },
+  "Many-Worlds / Everettian":             { result: true },
+  "Pilot-Wave / Bohmian":                 { result: true },
+  "Consistent-Histories":                 { result: true },
+  "Time-Symmetric / Two-State-Vector":    { result: true },
+  "Superdeterminism":                     { result: true },
+  "Modal / ψ-ontic non-collapse":         { result: true },
+  "QBism (Quantum Bayesianism)":          { result: true },
+  "Relational Quantum Mechanics":         { result: true },
+  "Ensemble / Statistical Interpretation":{ result: true },
+  "Transactional Interpretation":         { result: true }
+};
+
+const results = {
+  "Objective-Collapse Theory": {
+    summary: "Nature carries its own built‑in “snap‑to‑reality” switch — superpositions collapse on their own, no observer required.",
+    flavours: [
+      ["GRW",          "Rare random jolts localise particles. Experiments now hunt for those jolts — none seen so far."],
+      ["Gravity‑Induced", "Massive superpositions tear spacetime; when the strain passes a threshold, the state collapses."],
+      ["ORCH‑OR",      "Hameroff & Penrose: gravity‑triggered collapses inside brain microtubules power consciousness."]
+    ]
+  },
+  "Consciousness-Collapse": {
+    summary: "A quantum state stays in limbo until a conscious mind looks — awareness itself snaps possibilities into one outcome.",
+    flavours: [
+      ["Wigner–von Neumann", "Collapse occurs at the mind–matter boundary."],
+      ["Dual‑Aspect", "Mind and matter are two sides of a neutral underlying reality, collapsing together."]
+    ]
+  },
+  "Pragmatic Copenhagen": {
+    summary: "Treat |ψ⟩ as a tool for predicting detector clicks; arguing about unseen reality between clicks is a distraction.",
+    flavours: [
+      ["Orthodox Bohr‑Heisenberg", "Use classical language for setups and outcomes, apply the wave function, and stop there."],
+      ["Decoherence‑Assisted", "Environment‑induced decoherence explains why macroscopic things look classical, no collapse postulate needed."]
+    ]
+  },
+  "Many-Worlds / Everettian": {
+    summary: "The wave function never collapses; instead, the universe quietly branches into non‑interacting realities at every quantum event.",
+    flavours: [
+      ["Minimal Everett",     "Just keep Schrödinger running forever; worlds are stable decohered branches."],
+      ["Many‑Minds",          "Branching happens in heads: one physical world, many parallel minds."],
+      ["Decision‑Theoretic",  "Probability equals rational betting weights across future branches."]
+    ]
+  },
+  "Pilot-Wave / Bohmian": {
+    summary: "Particles always have definite positions; a real pilot wave steers them, reproducing all quantum phenomena.",
+    flavours: [
+      ["Particle‑Guidance", "de Broglie–Bohm deterministic paths guided by a quantum potential."],
+      ["Stochastic Mechanics", "Classical diffusion + a quantisation rule mimics Schrödinger."]
+    ]
+  },
+  "Consistent-Histories": {
+    summary: "Quantum facts come in whole, non‑interfering storylines; pick one coherent set and talk classically inside it.",
+    flavours: [
+      ["Gell‑Mann–Hartle", "Sequences of projector 'snapshots' with zero cross‑interference get classical probabilities."],
+      ["Ithaca (Correlations‑Only)", "Only correlations are real, never the correlata themselves."]
+    ]
+  },
+  "Time-Symmetric / Two-State-Vector": {
+    summary: "Future boundary conditions can influence the past; particles carry forward‑ and backward‑in‑time instructions.",
+    flavours: [
+      ["Two‑State‑Vector Formalism", "State vectors evolve both ways between preparation and post‑selection."],
+      ["Lagrangian‑Only", "Reality is a full 4‑D film reel chosen by an action principle satisfying both past and future frames."]
+    ]
+  },
+  "Superdeterminism": {
+    summary: "Nothing escapes the universe’s preset wiring, including experimenters’ choices; quantum correlations stay local without violating Bell.",
+    flavours: [
+      ["Cellular Automaton", "Reality is an unimaginably fine digital grid ticking since the Big Bang."],
+      ["Global Constraint",  "A holistic, all‑at‑once boundary rule knits distant regions and future choices together."]
+    ]
+  },
+  "Modal / ψ-ontic non-collapse": {
+    summary: "|ψ⟩ is real but doesn’t force every property to take a sharp value; some features stay 'maybe' until context makes them actual.",
+    flavours: [
+      ["Van Fraassen Modal Logic", "Observables compatible with the Hamiltonian get definite values."],
+      ["Kochen‑Dieks", "Definiteness depends on the measurement context."]
+    ]
+  },
+  "QBism (Quantum Bayesianism)": {
+    summary: "Quantum theory is a personal user’s manual; |ψ⟩ encodes your expectations and is updated like Bayesian beliefs.",
+    flavours: [
+      ["Personalist Bayesian", "Born rule is the house rule for revising private betting odds."],
+      ["Participatory Realist", "Each measurement helps create a new fact—reality is collaboratively woven."]
+    ]
+  },
+  "Relational Quantum Mechanics": {
+    summary: "A quantum fact is never absolute; it’s always about how two systems interact. Change the partner and the fact may change.",
+    flavours: [
+      ["Rovelli Minimal", "Events are definite only relative to the system that interacted."],
+      ["Information‑Relational", "Reality is an ever‑updating web of information exchanges."]
+    ]
+  },
+  "Ensemble / Statistical Interpretation": {
+    summary: "|ψ⟩ only describes crowds, never individuals; quantum theory is a statistics manual, not a microscope into single‑particle reality.",
+    flavours: [
+      ["Einsteinian Minimalist", "|ψ⟩ predicts outcome frequencies for infinite ensembles; silent about individuals."],
+      ["Epistemic‑Restriction", "Quantum randomness reflects built‑in limits on what can be known simultaneously."]
+    ]
+  },
+  "Transactional Interpretation": {
+    summary: "A quantum event is a two‑way handshake across time: emitters send offers forward, absorbers reply backward; the completed transaction is what we observe.",
+    flavours: [
+      ["Cramer Original", "Standing‑wave handshake forms outside ordinary cause‑and‑effect."],
+      ["Possibilist", "Offers and confirmations are fully real possibilities living in a pre‑spacetime realm."]
+    ]
+  }
+};
+
+/* =====  RENDERING LOGIC ============================================== */
+
+const qText  = document.getElementById("questionText");
+const optArea= document.getElementById("optionArea");
+const quizCard   = document.getElementById("quizCard");
+const resultCard = document.getElementById("resultCard");
+const restartBtn = document.getElementById("restartBtn");
+const resTitle   = document.getElementById("resultTitle");
+const resSum     = document.getElementById("resultSummary");
+const flavHead   = document.getElementById("flavourHeading");
+const flavList   = document.getElementById("flavourList");
+
+function clearOptions() { optArea.innerHTML = ""; }
+
+function addOption(label, nextKey) {
+  const btn = document.createElement("button");
+  btn.className = "btn btn-primary option-btn w-100";
+  btn.textContent = label;
+  btn.onclick = () => advance(nextKey);
+  optArea.appendChild(btn);
+}
+
+function displayQuestion(nodeKey) {
+  const node = tree[nodeKey];
+  qText.textContent = node.text;
+  clearOptions();
+  node.options.forEach(opt => addOption(opt.label, opt.next));
+}
+
+function displayResult(key) {
+  quizCard.classList.add("d-none");
+  resultCard.classList.remove("d-none");
+  restartBtn.classList.remove("d-none");
+
+  const data = results[key] || { summary:"", flavours:[] };
+  resTitle.textContent = key;
+  resSum.textContent   = data.summary;
+
+  flavHead.textContent = data.flavours.length ? "Flavours you might explore next:" : "";
+  flavList.innerHTML   = "";
+  data.flavours.forEach(([name, desc])=>{
+    const li = document.createElement("li");
+    li.className = "list-group-item";
+    li.innerHTML = `<strong>${name}.</strong>  ${desc}`;
+    flavList.appendChild(li);
+  });
+
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function advance(nextKey) {
+  if (tree[nextKey] && tree[nextKey].result) {
+    displayResult(nextKey);
+  } else {
+    /* tiny fade‑in nicety */
+    quizCard.classList.add("fade-exit");
+    setTimeout(()=>{
+      quizCard.classList.remove("fade-exit");
+      displayQuestion(nextKey);
+      quizCard.classList.add("fade-enter");
+      setTimeout(()=>quizCard.classList.remove("fade-enter"),10);
+    },200);
+  }
+}
+
+restartBtn.onclick = () => {
+  resultCard.classList.add("d-none");
+  quizCard.classList.remove("d-none");
+  restartBtn.classList.add("d-none");
+  displayQuestion("q1");
+};
+
+document.addEventListener("DOMContentLoaded", ()=> displayQuestion("q1"));
+</script>
+</body>
+</html>
